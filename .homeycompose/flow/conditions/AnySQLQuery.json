@@ -1,0 +1,102 @@
+{
+  "title": {
+    "en": "SQL Select response equals",
+    "nl": "SQL Select antwoord is gelijk aan"
+  },
+  "titleFormatted": {
+    "en": "If response of the SQL query \"[[sqlQuery]]\" [[operator]] the value [[value2Check]]",
+    "nl": "Als het antwoord op de SQL query \"[[sqlQuery]]\" [[operator]] de waarde [[value2Check]]"
+  },
+  "args": [
+    {
+      "type": "text",
+      "name": "sqlQuery",
+      "title": {
+        "en": "SQL Query",
+        "nl": "SQL Query"
+      },
+      "placeholder": {
+        "en": "Select top 1 * from table",
+        "nl": "Select top 1 * from table"
+      }
+    },
+    {
+      "name": "operator",
+      "type": "dropdown",
+      "title": {
+        "en": "operator",
+        "nl": "operator"
+      },
+      "values": [
+        {
+          "id": "==",
+          "label": {
+            "en": "==",
+            "nl": "=="
+          }
+        },
+        {
+          "id": "!=",
+          "label": {
+            "en": "!=",
+            "nl": "!="
+          }
+        },
+        {
+          "id": ">",
+          "label": {
+            "en": ">",
+            "nl": ">"
+          }
+        },
+        {
+          "id": ">=",
+          "label": {
+            "en": ">=",
+            "nl": ">="
+          }
+        },
+        {
+          "id": "<",
+          "label": {
+            "en": "<",
+            "nl": "<"
+          }
+        },
+        {
+          "id": "<=",
+          "label": {
+            "en": "<=",
+            "nl": "<="
+          }
+        },
+        {
+          "id": "===",
+          "label": {
+            "en": "===",
+            "nl": "==="
+          }
+        },
+        {
+          "id": "!==",
+          "label": {
+            "en": "!==",
+            "nl": "!=="
+          }
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "name": "value2Check",
+      "title": {
+        "en": "value",
+        "nl": "waarde"
+      },
+      "placeholder": {
+        "en": "",
+        "nl": ""
+      }
+    }
+  ]
+}

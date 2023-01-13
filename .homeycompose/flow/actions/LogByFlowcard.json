@@ -1,0 +1,36 @@
+{
+  "title": {
+    "en": "Log to SQL database",
+    "nl": "Registreer in SQL database"
+  },
+  "titleFormatted": {
+    "en": "Add log entry for [[CapabilityName]] with [[CapabilityData]] to the SQL Insights database",
+    "nl": "Voeg een registratie toe voor [[CapabilityName]] met [[CapabilityData]] aan de SQL Insights database"
+  },  
+  "args": [
+    {
+      "type": "text",
+      "name": "CapabilityName",
+      "title": {
+        "en": "Capability Name",
+        "nl": "Capability Name"
+      },
+      "placeholder": {
+        "en": "CapabilityName",
+        "nl": "CapabilityName"
+      }
+    },
+    {
+      "type": "text",
+      "name": "CapabilityData",
+      "title": {
+        "en": "Capability Data",
+        "nl": "Capability Data"
+      },
+      "placeholder": {
+        "en": "CapabilityData",
+        "nl": "CapabilityData"
+      }
+    }
+  ]
+}

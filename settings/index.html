@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons'>
+	<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/vuetify@2.3.4/dist/vuetify.min.css'>
+	<link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900'>
+	<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/@mdi/font@4.x/css/materialdesignicons.min.css'>
+	<link rel='stylesheet' href='insights2sql.css'>
+
+	<script src="https://cdn.jsdelivr.net/npm/babel-polyfill/dist/polyfill.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vue@2.x/dist/vue.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vuetify@2.3.4/dist/vuetify.min.js"></script>
+	<script src="/homey.js" data-origin="settings"></script>
+	<script src="/manager/webserver/assets/js/jquery.js"></script>
+	<script src="insights2sql.js"></script>
+</head>
+
+<body translate="no">
+	<div class="splash">
+		<h1 style="text-align: center">Please wait while we render this app...</h1>
+		<div class="spinner">
+			<div class="lds-roller">
+				<div></div>
+				<div></div>
+				<div></div>
+				<div></div>
+				<div></div>
+				<div></div>
+				<div></div>
+				<div></div>
+			</div>
+		</div>
+	</div>
+	</div>
+	<div id="app" style="display:none">
+		<v-app>
+			<v-app-bar app dense fixed dark>
+				<v-tabs v-model="tab" grow :mobile-breakpoint="0" class="fixed-tabs-bar">
+					<v-tab href="#Devices">
+						Devices
+					</v-tab>
+					<v-tab key="sql" ref="sql" href="#SQL-Settings">
+						SQL
+					</v-tab>
+					<v-tab href="#Log" @change="showLogLines">
+						Log
+					</v-tab>
+				</v-tabs>
+			</v-app-bar>
+			<v-main>
+				<v-tabs-items v-model="tab" :touchless="true">
+					<v-tab-item :key="1" value="Devices">
+						<v-text-field v-model="search" append-icon="search" label="Search" update-line hide-details dense>
+						</v-text-field>
+						<v-data-table :item-class="rowClass" :headers="deviceheaders" fixed-header height=100vh
+							:items="devices" :search="search" :mobile-breakpoint="0" :expanded="expanded" sort-by="name"
+							item-key="id" disable-pagination hide-default-footer dense @click:row="toggleExpand">
+							<template v-slot:expanded-item="{ headers, item }">
+								<td :colspan="headers.length">
+									<v-row class="caption font-weight-bold">
+										<v-flex xs7 sm8>
+											Capability
+										</v-flex>
+										<v-flex xs2 sm1 v-if="item.type == 'device'" class="right header-font">
+											Seconds&nbsp
+										</v-flex>
+										<v-flex xs2 sm1 v-else class="centered header-font">
+											&nbsp
+										</v-flex>
+										<v-flex xs1 sm1 v-if="item.type == 'device'" class="centered header-font">
+											Timed
+										</v-flex>
+										<v-flex xs1 sm1 v-else class="centered header-font">
+											&nbsp
+										</v-flex>
+										<v-flex xs1 sm1 class="centered header-font">
+											Event
+										</v-flex>
+										<v-flex xs1 sm1 class="centered header-font">
+											Update
+										</v-flex>
+									</v-row>
+									<template v-for="capability in item.capabilitiesObj">
+										<v-row>
+											<v-flex xs7 sm8>
+												{{ capability.capability }}
+											</v-flex>
+											<v-flex xs2 sm1 class="right">
+												<v-text-field hide-details="auto" v-model="capability.seconds"
+													v-show="capability.timed" dense height="18px"
+													@change="capabilityChanged(item, capability.capability, capability.event, capability.timed, capability.seconds, capability.update, 's')">
+												</v-text-field>
+											</v-flex>
+											<v-flex xs1 sm1 class="centered">
+												<v-simple-checkbox :hidden="item.type != 'device'"
+													v-model="capability.timed"
+													@input="if (capability.seconds == '') {capability.seconds = '300'}; capabilityChanged(item, capability.capability, capability.event, capability.timed, capability.seconds, capability.update, 't');">
+												</v-simple-checkbox>
+											</v-flex>
+											<v-flex xs1 sm1 class="centered">
+												<v-simple-checkbox :label="capability.capability"
+													v-model="capability.event"
+													@input="capabilityChanged(item, capability.capability, capability.event, capability.timed, capability.seconds, capability.update, 'e')">
+												</v-simple-checkbox>
+											</v-flex>
+											<v-flex xs1 sm1 class="centered"
+												v-if="capability.event || capability.timed">
+												<v-simple-checkbox :label="capability.capability"
+													v-model="capability.update"
+													@input="capabilityChanged(item, capability.capability, capability.event, capability.timed, capability.seconds, capability.update, 'u')">
+												</v-simple-checkbox>
+											</v-flex>
+											<v-flex xs1 sm1 v-else class="centered">
+												<v-simple-checkbox disabled :label="capability.capability"
+													v-model="capability.update"></v-simple-checkbox>
+											</v-flex>
+										</v-row>
+									</template>
+								</td>
+							</template>
+						</v-data-table>
+					</v-tab-item>
+					<v-tab-item :key="2" value="SQL-Settings">
+						<v-card flat>
+							<v-card-text>SQL Settings</v-card-text>
+							<fieldset id="sqlSettings">
+								<fieldset>
+									<legend data-i18n='settings.sqlcfg'> </legend>
+									<label for="sqlsvr_ip" data-i18n="sql.sqlsvr_ip"> </label>
+									<input id="sqlsvr_ip" oninput="sqlSettingsChanged();" class="required" size="70"
+										type="text" placeholder="e.g. 192.168.16.200 / sql1.domain.local"
+										v-model.lazy="sqlsvr_ip" />
+									<label for="sqlsvr_instance" data-i18n="sql.sqlsvr_instance"> </label>
+									<input id="sqlsvr_instance" oninput="sqlSettingsChanged();" size="70" type="text"
+										placeholder="e.g. SQLExpress" v-model.lazy="sqlsvr_instance" />
+									<label for="sqlsvr_port" data-i18n="sql.sqlsvr_port"> </label>
+									<input id="sqlsvr_port" oninput="sqlSettingsChanged();" size="70" type="text"
+										placeholder="e.g. 1433" v-model.lazy="sqlsvr_port" />
+									<label for="sqlsvr_db" data-i18n="sql.sqlsvr_db"> </label>
+									<input id="sqlsvr_db" oninput="sqlSettingsChanged();" class="required" size="70"
+										type="text" placeholder="e.g. HomeyInsights" v-model.lazy="sqlsvr_db" />
+								</fieldset>
+								<fieldset>
+									<legend data-i18n='settings.sqlcred'> </legend>
+									<label for="sqlsvr_username" data-i18n="sql.sqluser"> </label>
+									<input id="sqlsvr_username" oninput="sqlSettingsChanged();" class="required"
+										size="45" type="text" placeholder="e.g. sqlHomeyAdmin"
+										v-model.lazy="sqlsvr_username" />
+									<label for="sqlsvr_password" data-i18n="sql.sqlpassword"> </label>
+									<input id="sqlsvr_password" oninput="sqlSettingsChanged();" class="required"
+										size="45" type="password" placeholder="e.g. h@rd^Pas$W0rD8#"
+										v-model.lazy="sqlsvr_password" />
+								</fieldset>
+								<button id="test" class="left" data-i18n="sql.sqltest"
+									onclick="hideKeyboard(); testSQLConnection();"> </button>
+								<button id="save" class="right" data-i18n="sql.sqlcfgsave"
+									onclick="hideKeyboard(); saveSettings();" style="display:none;"> </button>
+								<button id="cancel" class="right" data-i18n="sql.sqlcfgcancel"
+									onclick="hideKeyboard(); sqlSettingsReset();" style="display:none;"> </button>
+							</fieldset>
+							<fieldset>
+								<button id="cleanup" class="left" data-i18n="sql.cleanup" onclick="deviceCleanup();">
+								</button>
+							</fieldset>
+						</v-card>
+					</v-tab-item>
+					<v-tab-item :key="3" value="Log">
+						<v-card flat>
+							<v-card-text>Logging</v-card-text>
+							<fieldset>
+								<button id="deteleLogs" class="left" data-i18n="logging.deleteLogs"
+									onclick="deleteLogs()"> </button>
+								<button id="getLogs" class="right" data-i18n="logging.getLogs" onclick="showLogs()">
+								</button>
+							</fieldset>
+							<fieldset>
+								<div id="rtlog"></div>
+							</fieldset>
+						</v-card>
+					</v-tab-item>
+				</v-tabs-items>
+			</v-main>
+		</v-app>
+	</div>
+	<script type="text/javascript">
+		function onHomeyReady(Homey) {
+			Homey.ready();
+
+			Homey.get('sqlSettings', function (err, i2sqlSettings) {
+				if (err) {
+					Homey.alert(err);
+				} else {
+					if (i2sqlSettings != (null || undefined)) {
+						window.i2sqlSettings = i2sqlSettings
+					} else {
+						window.i2sqlSettings.sqlsvr_ip = "";
+						window.i2sqlSettings.sqlsvr_instance = "";
+						window.i2sqlSettings.sqlsvr_port = "";
+						window.i2sqlSettings.sqlsvr_db = "";
+						window.i2sqlSettings.sqlsvr_username = "";
+						window.i2sqlSettings.sqlsvr_password = "";
+						window.i2sqlSettings.sqlsvr_testPassed = false;
+					}
+				}
+				if (!(window.i2sqlSettings.sqlsvr_testPassed)) {
+					document.getElementById("save").style.display = "none";
+				} else {
+					document.getElementById("save").style.display = "block";
+				}
+			});
+
+
+			Homey.get('sqlDevices', function (err, i2sqlDevices) {
+				if (err) {
+					Homey.alert(err);
+					saveSettings()
+				} else {
+					if (i2sqlDevices != (null || undefined)) {
+						window.i2sqlDevices = i2sqlDevices
+					}
+				}
+			});
+
+			Homey.api('GET', 'getDevices/', async (err, allDevices) => {
+				if (err) return Homey.alert(err);
+				allCapabilities = []
+				Object.values(allDevices).forEach(device => {
+					var devicecapabilities = new Array();
+					searchCapabilities = ""
+					device.capabilities.forEach(capability => {
+						searchCapabilities = searchCapabilities + capability
+						event = false
+						timed = false
+						update = false
+						seconds = ''
+						update = false
+						tmpDevice = device['id']
+						try {
+							if (i2sqlDevices[tmpDevice][capability]["update"] != undefined) {
+								update = i2sqlDevices[tmpDevice][capability]["update"]
+							}
+							if (i2sqlDevices[tmpDevice][capability]["event"] != undefined) {
+								event = i2sqlDevices[tmpDevice][capability]["event"]
+							}
+							if (i2sqlDevices[tmpDevice][capability]["timed"] != undefined) {
+								timed = true
+								seconds = i2sqlDevices[tmpDevice][capability]["timed"]
+							}
+						}
+						catch (err) {
+							// Do nothing
+						}
+						var newCapability = { capability: capability, event: event, timed: timed, seconds: seconds, update: update };
+						devicecapabilities.push(newCapability);
+					});
+					// Alleen toevoegen als het apparaat capabilities heeft
+					if (JSON.stringify(devicecapabilities).length > 2) {
+						devicecapabilities.sort((a, b) => (a.capability > b.capability) ? 1 : -1)
+						var newDevice = new Array();
+						var newDevice = { "name": device.name, "id": device.id, "zoneName": device.zoneName, "value": '', "capabilitiesObj": devicecapabilities, "type": 'device', "searchCapabilities": searchCapabilities };
+						allCapabilities.push(newDevice);
+					}
+				})
+
+				new Vue({
+					el: '#app',
+					vuetify: new Vuetify(),
+					methods: {
+						rowClass(item) {
+							rowClass = ''
+							Object.values(item.capabilitiesObj).forEach((capability) => {
+								if (capability.event || capability.timed) { rowClass = 'green' } else { capability.update = false }
+								if (capability.timed && ((!(Number.isInteger(parseInt(capability.seconds)))) || (parseInt(capability.seconds) < 60))) { rowClass = 'yellow' }
+								if (capability.timed && ((!(Number.isInteger(parseInt(capability.seconds)))) || (parseInt(capability.seconds) < 15))) { rowClass = 'orange' }
+								if (capability.timed && ((!(Number.isInteger(parseInt(capability.seconds)))) || (parseInt(capability.seconds) < 5))) { rowClass = 'red' }
+							});
+							return rowClass;
+						},
+						toggleExpand(value) {
+							(this.expanded.includes(value)) ? this.expanded.splice(this.expanded.indexOf(value), 1) : this.expanded.push(value);
+						},
+						//capabilityChanged(item, capability.capability, capability.event, capability.timed, capability.seconds, capability.update, 'u')
+						capabilityChanged(device, capability, event, timed, seconds, update, action) {
+							if (!(device.id in window.i2sqlDevices)) { window.i2sqlDevices[device.id] = {} }
+							if (!(capability in window.i2sqlDevices[device.id])) { window.i2sqlDevices[device.id][capability] = {} }
+
+							switch (action) {
+								case 'e':
+									if (event) {
+										if (!('event' in window.i2sqlDevices[device.id][capability])) { window.i2sqlDevices[device.id][capability]['event'] = true }
+										attachListener('{ "id" : "' + device.id + '",  "capability" : "' + capability + '", "update" : ' + update + '}')
+									} else {
+										destroyListener('{ "id" : "' + device.id + '",  "capability" : "' + capability + '"}')
+										delete window.i2sqlDevices[device.id][capability]['event']
+										if (!(timed)) { delete window.i2sqlDevices[device.id][capability]['update'] }
+									}
+									break;
+								case 't':
+									if (timed) {
+										if (!('timed' in window.i2sqlDevices[device.id][capability])) { window.i2sqlDevices[device.id][capability]['timed'] = seconds }
+										attachScheduler('{ "id" : "' + device.id + '",  "capability" : "' + capability + '",  "seconds" : "' + seconds + '", "update" : ' + update + '}')
+									} else {
+										destroyScheduler('{ "id" : "' + device.id + '",  "capability" : "' + capability + '",  "seconds" : "' + seconds + '"}')
+										delete window.i2sqlDevices[device.id][capability]['timed']
+										if (!(event)) { delete window.i2sqlDevices[device.id][capability]['update'] }
+									}
+									break;
+								case 's':
+									if (timed) {
+										window.i2sqlDevices[device.id][capability]['timed'] = seconds
+										destroyScheduler('{ "id" : "' + device.id + '",  "capability" : "' + capability + '",  "seconds" : "' + seconds + '"}')
+										attachScheduler('{ "id" : "' + device.id + '",  "capability" : "' + capability + '",  "seconds" : "' + seconds + '", "update" : ' + update + '}')
+									} else {
+										destroyScheduler('{ "id" : "' + device.id + '",  "capability" : "' + capability + '",  "seconds" : "' + seconds + '"}')
+									}
+									break;
+								case 'u':
+									if (timed) {
+										destroyScheduler('{ "id" : "' + device.id + '",  "capability" : "' + capability + '",  "seconds" : "' + seconds + '"}')
+										attachScheduler('{ "id" : "' + device.id + '",  "capability" : "' + capability + '",  "seconds" : "' + seconds + '", "update" : ' + update + '}')
+									}
+									if (event) {
+										destroyListener('{ "id" : "' + device.id + '",  "capability" : "' + capability + '"}')
+										attachListener('{ "id" : "' + device.id + '",  "capability" : "' + capability + '", "update" : ' + update + '}')
+									}
+									if (update) {
+										window.i2sqlDevices[device.id][capability]['update'] = true
+									} else {
+										window.i2sqlDevices[device.id][capability]['update'] = false
+									}
+									break;
+							}
+							if (Object.keys(window.i2sqlDevices[device.id][capability]).length == 0) {
+								delete window.i2sqlDevices[device.id][capability]
+							}
+							if (Object.keys(window.i2sqlDevices[device.id]).length == 0) {
+								delete window.i2sqlDevices[device.id]
+							}
+
+							Homey.set('sqlDevices', window.i2sqlDevices, function (err) {
+								if (err) {
+									Homey.alert(err);
+								} else {
+									//Homey.alert( "Settings saved", "info" );
+								}
+							});
+						},
+						showLogLines(value) {
+							showLogs();
+						}
+					},
+					data: () => ({
+						loading: false,
+						expanded: [''],
+						updateExpand: true,
+						tab: "Devices",
+						search: '',
+						deviceheaders:
+							[
+								{ text: 'Device', value: 'name', filterable: true, align: 'start' },
+								{ text: 'Zone', value: 'zoneName', filterable: true },
+								{ text: 'Capability', value: 'searchCapabilities', filterable: true, align: ' d-none' }
+							],
+						devices: allCapabilities,
+						sqlsvr_ip: window.i2sqlSettings.sqlsvr_ip,
+						sqlsvr_instance: window.i2sqlSettings.sqlsvr_instance,
+						sqlsvr_port: window.i2sqlSettings.sqlsvr_port,
+						sqlsvr_db: window.i2sqlSettings.sqlsvr_db,
+						sqlsvr_username: window.i2sqlSettings.sqlsvr_username,
+						sqlsvr_password: window.i2sqlSettings.sqlsvr_password
+					}),
+					mounted() {
+						hideLoader();
+					}
+				})
+			})
+		}
+	</script>
+</body>
+
+</html>

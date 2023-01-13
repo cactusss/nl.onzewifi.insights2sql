@@ -1,0 +1,37 @@
+{
+	"sql": {
+		"sqltab": "SQL",
+		"sqltitle": "SQL Instellingen",
+		"subtitle": "",
+		"sqlcfg": "SQL Server instellingen",
+		"sqlsvr_ip": "Server IP Adres of fqdn",
+		"sqlsvr_instance": "SQL Instance name (optioneel)",
+		"sqlsvr_port": "Port number  (optioneel)",
+		"sqlsvr_db": "SQL Database",
+		"sqlcred": "SQL Connection aanmeld gegevens",
+		"sqluser": "Gebruikersnaam",
+		"sqlpassword": "Wachtwoord",
+		"sqlcfgsave": "Instellingen opslaan",
+		"sqlcfgcancel": "Annuleren",
+		"sqlcfgsaved": "SQL Instellingen opgeslagen",
+		"sqlcfgloaded": "SQL Instellingen geladen",
+		"sqltest": "Test verbinding",
+		"sqltestsucceeded": "SQL Verbindingstest geslaagd",
+		"cleanup": "Apparaten opschonen"
+	},
+	"general": {
+		"generaltab": "Algemeen",
+		"generaltitle": "Algemene Instellingen"
+	},
+	"device": {
+		"devicetab": "Apparaten",
+		"devicetitle": "Apparaat Instellingen"
+	},
+	"logging": {
+		"logtab": "Logging",
+		"logtitle": "Realtime Log",
+		"getLogs": "Log laden",
+		"deleteLogs": "Log verwijderen",
+		"logsDeteleted": "Logbestand verwijderd"
+	}
+}

@@ -1,0 +1,38 @@
+{
+	"sql": {
+		"sqltab": "SQL",
+		"sqltitle": "SQL Settings",
+		"subtitle": "",
+		"sqlcfg": "SQL Server settings",
+		"sqlsvr_ip": "Server IP Address or fqdn",
+		"sqlsvr_instance": "SQL Instance name (optional)",
+		"sqlsvr_port": "Port number  (optional)",
+		"sqlsvr_db": "SQL Database",
+		"sqlcred": "SQL Connection credentials",
+		"sqluser": "Username",
+		"sqlpassword": "Password",
+		"sqlcfgsave": "Save configuration",
+		"sqlcfgcancel": "Cancel",
+		"sqlcfgsaved": "SQL Configuration saved",
+		"sqlcfgloaded": "SQL Configuration loaded",
+		"sqltest": "Test connection",
+		"sqltestsucceeded": "SQL Conecction test succeeded",
+		"cleanup": "Cleanup devices"
+	},
+	"general": {
+		"generaltab": "General",
+		"generaltitle": "General Settings"
+	},
+	"device": {
+		"devicetab": "Devices",
+		"devicetitle": "Device Settings"
+	},
+	"logging": {
+		"logtab": "Logging",
+		"logtitle": "Realtime Log",
+		"getLogs": "Load logs",
+		"deleteLogs": "Remove logs",
+		"logsDeteleted": "Logfile deleted"
+	}
+	
+}
