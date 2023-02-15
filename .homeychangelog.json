@@ -4,5 +4,14 @@
   },
   "1.4.0": {
     "en": "Logfile issues (Delete Log) fixed. Also added a conditional card that let's you query the SQL database for values. Have fun :)"
+  },
+  "1.6.2": {
+    "en": "Added update function, and changed SQL table (old table keeps working thanks to legacyMode)"
+  },
+  "1.6.3": {
+    "en": "Catching the unhandledRejection (tedious.js) errors"
+  },
+  "1.6.4": {
+    "en": "Added support for encrypted connections to the SQL server"
   }
 }

@@ -52,7 +52,8 @@
 			<v-main>
 				<v-tabs-items v-model="tab" :touchless="true">
 					<v-tab-item :key="1" value="Devices">
-						<v-text-field v-model="search" append-icon="search" label="Search" update-line hide-details dense>
+						<v-text-field v-model="search" append-icon="search" label="Search" update-line hide-details
+							dense>
 						</v-text-field>
 						<v-data-table :item-class="rowClass" :headers="deviceheaders" fixed-header height=100vh
 							:items="devices" :search="search" :mobile-breakpoint="0" :expanded="expanded" sort-by="name"
@@ -106,7 +107,7 @@
 												</v-simple-checkbox>
 											</v-flex>
 											<v-flex xs1 sm1 class="centered"
-												v-if="capability.event || capability.timed">
+												v-if="(capability.event || capability.timed) && !legacyMode">
 												<v-simple-checkbox :label="capability.capability"
 													v-model="capability.update"
 													@input="capabilityChanged(item, capability.capability, capability.event, capability.timed, capability.seconds, capability.update, 'u')">
@@ -141,6 +142,12 @@
 									<label for="sqlsvr_db" data-i18n="sql.sqlsvr_db"> </label>
 									<input id="sqlsvr_db" oninput="sqlSettingsChanged();" class="required" size="70"
 										type="text" placeholder="e.g. HomeyInsights" v-model.lazy="sqlsvr_db" />
+									</fieldset>
+									<fieldset>
+									<v-checkbox id="sqlsvr_encrypt" name="sqlsvr_encrypt" v-model="sqlsvr_encrypt" label="Encrypted connection" class="ma-0 pa-0"
+										@change="sqlSettingsChanged(); check_boxEncrypt($event)"></v-checkbox>
+									<v-checkbox id="sqlsvr_trustcertificate" name="sqlsvr_trustcertificate" v-model="sqlsvr_trustcertificate" label="Trust server certificate" class="ma-0 pa-0"
+										@change="sqlSettingsChanged(); check_boxEncrypt($event)"></v-checkbox>
 								</fieldset>
 								<fieldset>
 									<legend data-i18n='settings.sqlcred'> </legend>
@@ -193,7 +200,7 @@
 					Homey.alert(err);
 				} else {
 					if (i2sqlSettings != (null || undefined)) {
-						window.i2sqlSettings = i2sqlSettings
+						window.i2sqlSettings = i2sqlSettings;
 					} else {
 						window.i2sqlSettings.sqlsvr_ip = "";
 						window.i2sqlSettings.sqlsvr_instance = "";
@@ -201,6 +208,8 @@
 						window.i2sqlSettings.sqlsvr_db = "";
 						window.i2sqlSettings.sqlsvr_username = "";
 						window.i2sqlSettings.sqlsvr_password = "";
+						window.i2sqlSettings.sqlsvr_encrypt = false;
+						window.i2sqlSettings.sqlsvr_trustcertificate = false;
 						window.i2sqlSettings.sqlsvr_testPassed = false;
 					}
 				}
@@ -211,42 +220,50 @@
 				}
 			});
 
-
 			Homey.get('sqlDevices', function (err, i2sqlDevices) {
 				if (err) {
 					Homey.alert(err);
-					saveSettings()
+					saveSettings();
 				} else {
 					if (i2sqlDevices != (null || undefined)) {
-						window.i2sqlDevices = i2sqlDevices
+						window.i2sqlDevices = i2sqlDevices;
 					}
+				}
+			});
+
+			Homey.api('GET', 'getLegacyMode/', {}, function (err, result) {
+				if (err) {
+					Homey.alert('getLegacyMode error: ' + err);
+				} else {
+					if (result) { Homey.alert("Update not possible legacyMode enabled", "info"); }
+					window.legacyMode = result;
 				}
 			});
 
 			Homey.api('GET', 'getDevices/', async (err, allDevices) => {
 				if (err) return Homey.alert(err);
-				allCapabilities = []
+				allCapabilities = [];
 				Object.values(allDevices).forEach(device => {
 					var devicecapabilities = new Array();
-					searchCapabilities = ""
+					searchCapabilities = "";
 					device.capabilities.forEach(capability => {
-						searchCapabilities = searchCapabilities + capability
-						event = false
-						timed = false
-						update = false
-						seconds = ''
-						update = false
-						tmpDevice = device['id']
+						searchCapabilities = searchCapabilities + capability;
+						event = false;
+						timed = false;
+						update = false;
+						seconds = '';
+						update = false;
+						tmpDevice = device['id'];
 						try {
 							if (i2sqlDevices[tmpDevice][capability]["update"] != undefined) {
-								update = i2sqlDevices[tmpDevice][capability]["update"]
+								update = i2sqlDevices[tmpDevice][capability]["update"];
 							}
 							if (i2sqlDevices[tmpDevice][capability]["event"] != undefined) {
-								event = i2sqlDevices[tmpDevice][capability]["event"]
+								event = i2sqlDevices[tmpDevice][capability]["event"];
 							}
 							if (i2sqlDevices[tmpDevice][capability]["timed"] != undefined) {
-								timed = true
-								seconds = i2sqlDevices[tmpDevice][capability]["timed"]
+								timed = true;
+								seconds = i2sqlDevices[tmpDevice][capability]["timed"];
 							}
 						}
 						catch (err) {
@@ -257,24 +274,24 @@
 					});
 					// Alleen toevoegen als het apparaat capabilities heeft
 					if (JSON.stringify(devicecapabilities).length > 2) {
-						devicecapabilities.sort((a, b) => (a.capability > b.capability) ? 1 : -1)
+						devicecapabilities.sort((a, b) => (a.capability > b.capability) ? 1 : -1);
 						var newDevice = new Array();
 						var newDevice = { "name": device.name, "id": device.id, "zoneName": device.zoneName, "value": '', "capabilitiesObj": devicecapabilities, "type": 'device', "searchCapabilities": searchCapabilities };
 						allCapabilities.push(newDevice);
 					}
-				})
+				});
 
 				new Vue({
 					el: '#app',
 					vuetify: new Vuetify(),
 					methods: {
 						rowClass(item) {
-							rowClass = ''
+							rowClass = '';
 							Object.values(item.capabilitiesObj).forEach((capability) => {
-								if (capability.event || capability.timed) { rowClass = 'green' } else { capability.update = false }
-								if (capability.timed && ((!(Number.isInteger(parseInt(capability.seconds)))) || (parseInt(capability.seconds) < 60))) { rowClass = 'yellow' }
-								if (capability.timed && ((!(Number.isInteger(parseInt(capability.seconds)))) || (parseInt(capability.seconds) < 15))) { rowClass = 'orange' }
-								if (capability.timed && ((!(Number.isInteger(parseInt(capability.seconds)))) || (parseInt(capability.seconds) < 5))) { rowClass = 'red' }
+								if (capability.event || capability.timed) { rowClass = 'green'; } else { capability.update = false; }
+								if (capability.timed && ((!(Number.isInteger(parseInt(capability.seconds)))) || (parseInt(capability.seconds) < 60))) { rowClass = 'yellow'; }
+								if (capability.timed && ((!(Number.isInteger(parseInt(capability.seconds)))) || (parseInt(capability.seconds) < 15))) { rowClass = 'orange'; }
+								if (capability.timed && ((!(Number.isInteger(parseInt(capability.seconds)))) || (parseInt(capability.seconds) < 5))) { rowClass = 'red'; }
 							});
 							return rowClass;
 						},
@@ -283,60 +300,62 @@
 						},
 						//capabilityChanged(item, capability.capability, capability.event, capability.timed, capability.seconds, capability.update, 'u')
 						capabilityChanged(device, capability, event, timed, seconds, update, action) {
-							if (!(device.id in window.i2sqlDevices)) { window.i2sqlDevices[device.id] = {} }
-							if (!(capability in window.i2sqlDevices[device.id])) { window.i2sqlDevices[device.id][capability] = {} }
+							if (!(device.id in window.i2sqlDevices)) { window.i2sqlDevices[device.id] = {}; }
+							if (!(capability in window.i2sqlDevices[device.id])) { window.i2sqlDevices[device.id][capability] = {}; }
 
 							switch (action) {
 								case 'e':
 									if (event) {
-										if (!('event' in window.i2sqlDevices[device.id][capability])) { window.i2sqlDevices[device.id][capability]['event'] = true }
-										attachListener('{ "id" : "' + device.id + '",  "capability" : "' + capability + '", "update" : ' + update + '}')
+										if (!('event' in window.i2sqlDevices[device.id][capability])) { window.i2sqlDevices[device.id][capability]['event'] = true; }
+										attachListener('{ "id" : "' + device.id + '",  "capability" : "' + capability + '", "update" : ' + update + '}');
 									} else {
-										destroyListener('{ "id" : "' + device.id + '",  "capability" : "' + capability + '"}')
-										delete window.i2sqlDevices[device.id][capability]['event']
-										if (!(timed)) { delete window.i2sqlDevices[device.id][capability]['update'] }
+										destroyListener('{ "id" : "' + device.id + '",  "capability" : "' + capability + '"}');
+										delete window.i2sqlDevices[device.id][capability]['event'];
+										if (!(timed)) { delete window.i2sqlDevices[device.id][capability]['update']; }
 									}
 									break;
 								case 't':
 									if (timed) {
-										if (!('timed' in window.i2sqlDevices[device.id][capability])) { window.i2sqlDevices[device.id][capability]['timed'] = seconds }
-										attachScheduler('{ "id" : "' + device.id + '",  "capability" : "' + capability + '",  "seconds" : "' + seconds + '", "update" : ' + update + '}')
+										if (!('timed' in window.i2sqlDevices[device.id][capability])) { window.i2sqlDevices[device.id][capability]['timed'] = seconds; }
+										attachScheduler('{ "id" : "' + device.id + '",  "capability" : "' + capability + '",  "seconds" : "' + seconds + '", "update" : ' + update + '}');
 									} else {
-										destroyScheduler('{ "id" : "' + device.id + '",  "capability" : "' + capability + '",  "seconds" : "' + seconds + '"}')
-										delete window.i2sqlDevices[device.id][capability]['timed']
-										if (!(event)) { delete window.i2sqlDevices[device.id][capability]['update'] }
+										destroyScheduler('{ "id" : "' + device.id + '",  "capability" : "' + capability + '",  "seconds" : "' + seconds + '"}');
+										delete window.i2sqlDevices[device.id][capability]['timed'];
+										if (!(event)) { delete window.i2sqlDevices[device.id][capability]['update']; }
 									}
 									break;
 								case 's':
 									if (timed) {
-										window.i2sqlDevices[device.id][capability]['timed'] = seconds
-										destroyScheduler('{ "id" : "' + device.id + '",  "capability" : "' + capability + '",  "seconds" : "' + seconds + '"}')
-										attachScheduler('{ "id" : "' + device.id + '",  "capability" : "' + capability + '",  "seconds" : "' + seconds + '", "update" : ' + update + '}')
+										window.i2sqlDevices[device.id][capability]['timed'] = seconds;
+										destroyScheduler('{ "id" : "' + device.id + '",  "capability" : "' + capability + '",  "seconds" : "' + seconds + '"}');
+										attachScheduler('{ "id" : "' + device.id + '",  "capability" : "' + capability + '",  "seconds" : "' + seconds + '", "update" : ' + update + '}');
 									} else {
-										destroyScheduler('{ "id" : "' + device.id + '",  "capability" : "' + capability + '",  "seconds" : "' + seconds + '"}')
+										destroyScheduler('{ "id" : "' + device.id + '",  "capability" : "' + capability + '",  "seconds" : "' + seconds + '"}');
 									}
 									break;
 								case 'u':
-									if (timed) {
-										destroyScheduler('{ "id" : "' + device.id + '",  "capability" : "' + capability + '",  "seconds" : "' + seconds + '"}')
-										attachScheduler('{ "id" : "' + device.id + '",  "capability" : "' + capability + '",  "seconds" : "' + seconds + '", "update" : ' + update + '}')
-									}
-									if (event) {
-										destroyListener('{ "id" : "' + device.id + '",  "capability" : "' + capability + '"}')
-										attachListener('{ "id" : "' + device.id + '",  "capability" : "' + capability + '", "update" : ' + update + '}')
-									}
-									if (update) {
-										window.i2sqlDevices[device.id][capability]['update'] = true
-									} else {
-										window.i2sqlDevices[device.id][capability]['update'] = false
+									if (!legacyMode) {
+										if (timed) {
+											destroyScheduler('{ "id" : "' + device.id + '",  "capability" : "' + capability + '",  "seconds" : "' + seconds + '"}');
+											attachScheduler('{ "id" : "' + device.id + '",  "capability" : "' + capability + '",  "seconds" : "' + seconds + '", "update" : ' + update + '}');
+										}
+										if (event) {
+											destroyListener('{ "id" : "' + device.id + '",  "capability" : "' + capability + '"}');
+											attachListener('{ "id" : "' + device.id + '",  "capability" : "' + capability + '", "update" : ' + update + '}');
+										}
+										if (update) {
+											window.i2sqlDevices[device.id][capability]['update'] = true;
+										} else {
+											window.i2sqlDevices[device.id][capability]['update'] = false;
+										}
 									}
 									break;
 							}
 							if (Object.keys(window.i2sqlDevices[device.id][capability]).length == 0) {
-								delete window.i2sqlDevices[device.id][capability]
+								delete window.i2sqlDevices[device.id][capability];
 							}
 							if (Object.keys(window.i2sqlDevices[device.id]).length == 0) {
-								delete window.i2sqlDevices[device.id]
+								delete window.i2sqlDevices[device.id];
 							}
 
 							Homey.set('sqlDevices', window.i2sqlDevices, function (err) {
@@ -349,6 +368,15 @@
 						},
 						showLogLines(value) {
 							showLogs();
+						},
+						check_boxEncrypt(checkBoxState) {
+							//window.i2sqlSettings.sqlsvr_encrypt = checkBoxState;
+						},
+						check_boxTrustcertificate(checkBoxState) {
+							//window.i2sqlSettings.ssqlsvr_trustcertificate = checkBoxState;
+						},
+						sqlSettingsChanged() {
+							sqlSettingsChanged();
 						}
 					},
 					data: () => ({
@@ -364,18 +392,25 @@
 								{ text: 'Capability', value: 'searchCapabilities', filterable: true, align: ' d-none' }
 							],
 						devices: allCapabilities,
-						sqlsvr_ip: window.i2sqlSettings.sqlsvr_ip,
-						sqlsvr_instance: window.i2sqlSettings.sqlsvr_instance,
-						sqlsvr_port: window.i2sqlSettings.sqlsvr_port,
-						sqlsvr_db: window.i2sqlSettings.sqlsvr_db,
-						sqlsvr_username: window.i2sqlSettings.sqlsvr_username,
-						sqlsvr_password: window.i2sqlSettings.sqlsvr_password
+						sqlsvr_ip: 					window.i2sqlSettings.sqlsvr_ip,
+						sqlsvr_instance: 			window.i2sqlSettings.sqlsvr_instance,
+						sqlsvr_port: 				window.i2sqlSettings.sqlsvr_port,
+						sqlsvr_db: 					window.i2sqlSettings.sqlsvr_db,
+						sqlsvr_username: 			window.i2sqlSettings.sqlsvr_username,
+						sqlsvr_password: 			window.i2sqlSettings.sqlsvr_password,
+						sqlsvr_encrypt: 			window.i2sqlSettings.sqlsvr_encrypt,
+						sqlsvr_trustcertificate: 	window.i2sqlSettings.sqlsvr_trustcertificate,
 					}),
 					mounted() {
 						hideLoader();
+					},
+					computed: {
+						legacyMode() {
+							return window.legacyMode;
+						}
 					}
-				})
-			})
+				});
+			});
 		}
 	</script>
 </body>

@@ -1,7 +1,7 @@
 'use strict';
 
-const { HomeyAPI } = require('athom-api');
-const Homey = require('homey');
+// const { HomeyAPI } = require('athom-api');
+// const Homey = require('homey');
 
 module.exports = {
     async getDevices({ homey }) {
@@ -30,5 +30,8 @@ module.exports = {
     },
     async deviceCleanup({ homey }) {
         return homey.app.deviceCleanup();
+    },    
+    async getLegacyMode({ homey }) {
+        return homey.app.getLegacyMode();
     }
 };

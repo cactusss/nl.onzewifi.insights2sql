@@ -17,7 +17,9 @@
 		"sqlcfgloaded": "SQL Instellingen geladen",
 		"sqltest": "Test verbinding",
 		"sqltestsucceeded": "SQL Verbindingstest geslaagd",
-		"cleanup": "Apparaten opschonen"
+		"cleanup": "Apparaten opschonen",
+		"sqlsvr_encrypt": "Versleutel de verbinding",
+		"sqlsvr_trustcertificate": "Negeer server certificaat waarschuwing"
 	},
 	"general": {
 		"generaltab": "Algemeen",

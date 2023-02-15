@@ -17,7 +17,9 @@
 		"sqlcfgloaded": "SQL Configuration loaded",
 		"sqltest": "Test connection",
 		"sqltestsucceeded": "SQL Conecction test succeeded",
-		"cleanup": "Cleanup devices"
+		"cleanup": "Cleanup devices",
+		"sqlsvr_encrypt": "Encrypt connection",
+		"sqlsvr_trustcertificate": "Ignore server certificate warning"
 	},
 	"general": {
 		"generaltab": "General",

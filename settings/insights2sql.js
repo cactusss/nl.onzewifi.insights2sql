@@ -1,10 +1,10 @@
-i2sqlSettings = {}
-i2sqlDevices = {}
+i2sqlSettings = {};
+i2sqlDevices = {};
 
 function hideLoader() {
-	$('.splash').hide()
-	$('#app').show()
-	$('body').css('overflow','auto');
+	$('.splash').hide();
+	$('#app').show();
+	$('body').css('overflow', 'auto');
 }
 
 function showLogs() {
@@ -25,8 +25,8 @@ function showLogs() {
 function deleteLogs() {
 	Homey.api('GET', 'deletelogs/', (err) => {
 		if (err) {
-			Homey.alert(err.message, 'error'); 
-		} else { 
+			Homey.alert(err.message, 'error');
+		} else {
 			Homey.alert(`${Homey.__('logging.logsDeteleted')}`, 'info');
 			$('#rtlog').html('');
 			showLogs();
@@ -36,12 +36,15 @@ function deleteLogs() {
 }
 
 function saveSettings() {
-	i2sqlSettings.sqlsvr_ip 			= document.getElementById('sqlsvr_ip').value;
-	i2sqlSettings.sqlsvr_instance 	= document.getElementById('sqlsvr_instance').value;
-	i2sqlSettings.sqlsvr_port 		= document.getElementById('sqlsvr_port').value;
-	i2sqlSettings.sqlsvr_db 			= document.getElementById('sqlsvr_db').value;
-	i2sqlSettings.sqlsvr_username 	= document.getElementById('sqlsvr_username').value;
-	i2sqlSettings.sqlsvr_password 	= document.getElementById('sqlsvr_password').value;
+	i2sqlSettings.sqlsvr_ip = document.getElementById('sqlsvr_ip').value;
+	i2sqlSettings.sqlsvr_instance = document.getElementById('sqlsvr_instance').value;
+	i2sqlSettings.sqlsvr_port = document.getElementById('sqlsvr_port').value;
+	i2sqlSettings.sqlsvr_db = document.getElementById('sqlsvr_db').value;
+	i2sqlSettings.sqlsvr_username = document.getElementById('sqlsvr_username').value;
+	i2sqlSettings.sqlsvr_password = document.getElementById('sqlsvr_password').value;
+	i2sqlSettings.sqlsvr_encrypt = document.getElementById('sqlsvr_encrypt').checked;
+	i2sqlSettings.sqlsvr_trustcertificate = document.getElementById('sqlsvr_trustcertificate').checked;
+
 	Homey.set('sqlSettings', i2sqlSettings, (err) => {
 		if (err) {
 			Homey.alert(err, 'error');
@@ -49,7 +52,7 @@ function saveSettings() {
 	});
 	Homey.alert(`${Homey.__('Settings saved!')}`, 'info');
 }
-		
+
 function hideKeyboard() {
 	document.activeElement.blur();
 	$("input").blur();
@@ -63,49 +66,54 @@ function sqlSettingsChanged() {
 }
 
 function sqlSettingsReset() {
-	document.getElementById('sqlsvr_ip').value			= i2sqlSettings.sqlsvr_ip
-	document.getElementById('sqlsvr_instance').value	= i2sqlSettings.sqlsvr_instance
-	document.getElementById('sqlsvr_port').value		= i2sqlSettings.sqlsvr_port
-	document.getElementById('sqlsvr_db').value 			= i2sqlSettings.sqlsvr_db
-	document.getElementById('sqlsvr_username').value	= i2sqlSettings.sqlsvr_username
-	document.getElementById('sqlsvr_password').value	= i2sqlSettings.sqlsvr_password
+	document.getElementById('sqlsvr_ip').value = i2sqlSettings.sqlsvr_ip;
+	document.getElementById('sqlsvr_instance').value = i2sqlSettings.sqlsvr_instance;
+	document.getElementById('sqlsvr_port').value = i2sqlSettings.sqlsvr_port;
+	document.getElementById('sqlsvr_db').value = i2sqlSettings.sqlsvr_db;
+	document.getElementById('sqlsvr_username').value = i2sqlSettings.sqlsvr_username;
+	document.getElementById('sqlsvr_password').value = i2sqlSettings.sqlsvr_password;
+	document.getElementById('sqlsvr_encrypt').checked = i2sqlSettings.sqlsvr_encrypt;
+	document.getElementById('sqlsvr_trustcertificate').checked = i2sqlSettings.sqlsvr_trustcertificate;
 	document.getElementById("cancel").style.display = "none";
 	document.getElementById("save").style.display = "block";
 }
 
 function testSQLConnection() {
-	i2sqlSettings.sqlsvr_ip 			= document.getElementById('sqlsvr_ip').value;
-	i2sqlSettings.sqlsvr_instance 	= document.getElementById('sqlsvr_instance').value;
-	i2sqlSettings.sqlsvr_port 		= document.getElementById('sqlsvr_port').value;
-	i2sqlSettings.sqlsvr_db 			= document.getElementById('sqlsvr_db').value;
-	i2sqlSettings.sqlsvr_username 	= document.getElementById('sqlsvr_username').value;
-	i2sqlSettings.sqlsvr_password 	= document.getElementById('sqlsvr_password').value;
+	i2sqlSettings.sqlsvr_ip = document.getElementById('sqlsvr_ip').value;
+	i2sqlSettings.sqlsvr_instance = document.getElementById('sqlsvr_instance').value;
+	i2sqlSettings.sqlsvr_port = document.getElementById('sqlsvr_port').value;
+	i2sqlSettings.sqlsvr_db = document.getElementById('sqlsvr_db').value;
+	i2sqlSettings.sqlsvr_username = document.getElementById('sqlsvr_username').value;
+	i2sqlSettings.sqlsvr_password = document.getElementById('sqlsvr_password').value;
+	i2sqlSettings.sqlsvr_encrypt = document.getElementById('sqlsvr_encrypt').checked;
+	i2sqlSettings.sqlsvr_trustcertificate = document.getElementById('sqlsvr_trustcertificate').checked;
 
 	var sqlTestConfig = {
-		user:		i2sqlSettings.sqlsvr_username,
-		password:	i2sqlSettings.sqlsvr_password,
-		server:		i2sqlSettings.sqlsvr_ip,
-		database:	i2sqlSettings.sqlsvr_db,
-		debug: 		true,
+		user: i2sqlSettings.sqlsvr_username,
+		password: i2sqlSettings.sqlsvr_password,
+		server: i2sqlSettings.sqlsvr_ip,
+		database: i2sqlSettings.sqlsvr_db,
+		debug: true,
 		options: {
-			trustedConnection: 	true,
-			instanceName: 		i2sqlSettings.sqlsvr_instance || '',
-			port: 				i2sqlSettings.sqlsvr_port,
-			encrypt: 			false,
-			stream: 			true
+			trustedConnection: true,
+			instanceName: i2sqlSettings.sqlsvr_instance || '',
+			port: i2sqlSettings.sqlsvr_port,
+			encrypt: i2sqlSettings.sqlsvr_trustcertificate,
+			trustServerCertificate: i2sqlSettings.sqlsvr_trustcertificate,
+			stream: true
 		}
-	}
-	Homey.api('GET', 'testSQLConnection/?sqlConnectionSetting=' + JSON.stringify(sqlTestConfig), {} , function (err, result) {
+	};
+	Homey.api('GET', 'testSQLConnection/?sqlConnectionSetting=' + JSON.stringify(sqlTestConfig), {}, function (err, result) {
 		if (err) {
 			return Homey.alert(err, 'SQL Connection error');
 		} else {
 			if (result) {
-				i2sqlSettings.sqlsvr_testPassed = true
+				i2sqlSettings.sqlsvr_testPassed = true;
 				document.getElementById("cancel").style.display = "none";
 				document.getElementById("save").style.display = "";
 				return Homey.alert(`${Homey.__('SQL Connection succeeded. Yoy may save the settings now!')}`, 'info');
 			} else {
-				i2sqlSettings.sqlsvr_testPassed = false
+				i2sqlSettings.sqlsvr_testPassed = false;
 				document.getElementById("save").style.display = "none";
 				return Homey.alert(`${Homey.__('SQL Connection failed. Please check the log for futher information.')}`, 'error');
 			}
@@ -114,41 +122,41 @@ function testSQLConnection() {
 }
 
 function attachListener(parameters) {
-	Homey.api('POST', 'attachListener/?capabilityListener=' + parameters, {} , function (err, result) {
+	Homey.api('POST', 'attachListener/?capabilityListener=' + parameters, {}, function (err, result) {
 		if (err) {
 			return Homey.alert('attachListener error: ' + err);
-		} 
-	})	
+		}
+	});
 }
 
 function destroyListener(parameters) {
-	Homey.api('POST', 'destroyListener/?capabilityListener=' + parameters, {} , function (err, result) {
+	Homey.api('POST', 'destroyListener/?capabilityListener=' + parameters, {}, function (err, result) {
 		if (err) {
 			return Homey.alert('destroyListener error: ' + err);
-		} 
-	})	
+		}
+	});
 }
 
 function attachScheduler(parameters) {
-	Homey.api('POST', 'attachScheduler/?capabilityScheduler=' + parameters, {} , function (err, result) {
+	Homey.api('POST', 'attachScheduler/?capabilityScheduler=' + parameters, {}, function (err, result) {
 		if (err) {
 			return Homey.alert('attachScheduler error: ' + err);
-		} 
-	})	
+		}
+	});
 }
 
 function destroyScheduler(parameters) {
-	Homey.api('POST', 'destroyScheduler/?capabilityScheduler=' + parameters, {} , function (err, result) {
+	Homey.api('POST', 'destroyScheduler/?capabilityScheduler=' + parameters, {}, function (err, result) {
 		if (err) {
 			return Homey.alert('destroyScheduler error: ' + err);
-		} 
-	})	
+		}
+	});
 }
 
 function deviceCleanup() {
-	Homey.api('GET', 'deviceCleanup/', {} , function (err, result) {
+	Homey.api('GET', 'deviceCleanup/', {}, function (err, result) {
 		if (err) {
-			Homey.alert('deviceCleanup error: ' + err); 
+			Homey.alert('deviceCleanup error: ' + err);
 		} else { Homey.alert(`Deleted all non-existing devices from logging`, 'info'); }
 	});
 }

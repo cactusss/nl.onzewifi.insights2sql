@@ -1,8 +1,7 @@
 {
   "dependencies": {
-    "fixture-stdout":"0.2.1",
-    "athom-api":"3.6.7",
-    "mssql":"4.3.2",
-    "luxon":"2.0.2"
+    "fixture-stdout": "0.2.1",
+    "luxon": "2.0.2",
+    "mssql": "4.3.2"
   }
 }
